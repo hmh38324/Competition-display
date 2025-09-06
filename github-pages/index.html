@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生产竞赛排名系统</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 5px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            margin: 0 5px;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: rgba(255,255,255,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .ranking-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .ranking-table td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.3s ease;
+        }
+
+        .ranking-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .ranking-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .rank-1 { color: #ffd700; font-weight: bold; }
+        .rank-2 { color: #c0c0c0; font-weight: bold; }
+        .rank-3 { color: #cd7f32; font-weight: bold; }
+        
+        /* 为前四名添加浅蓝色底色 */
+        .ranking-table tbody tr:nth-child(1) {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb) !important;
+        }
+        .ranking-table tbody tr:nth-child(2) {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb) !important;
+        }
+        .ranking-table tbody tr:nth-child(3) {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb) !important;
+        }
+        .ranking-table tbody tr:nth-child(4) {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb) !important;
+        }
+
+        .score-high { color: #27ae60; font-weight: bold; }
+        .score-medium { color: #f39c12; font-weight: bold; }
+        .score-low { color: #e74c3c; font-weight: bold; }
+
+        .insufficient { color: #95a5a6; font-style: italic; }
+
+
+        .date-selector {
+            margin-bottom: 20px;
+        }
+
+        .date-selector select {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .date-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                margin: 5px;
+                padding: 10px 16px;
+            }
+            
+            .ranking-table {
+                font-size: 0.9rem;
+            }
+            
+            .ranking-table th,
+            .ranking-table td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+<script>window.competitionData = {
+  "total_rankings": [
+    {
+      "机号": "A01",
+      "班次": "乙班",
+      "总积分": 17,
+      "有效天数": 4,
+      "排名": 2,
+      "日均积分": 4.25
+    },
+    {
+      "机号": "A03",
+      "班次": "乙班",
+      "总积分": 14,
+      "有效天数": 4,
+      "排名": 5,
+      "日均积分": 3.5
+    },
+    {
+      "机号": "A05",
+      "班次": "乙班",
+      "总积分": 10,
+      "有效天数": 3,
+      "排名": 7,
+      "日均积分": 3.33
+    },
+    {
+      "机号": "A04",
+      "班次": "乙班",
+      "总积分": 10,
+      "有效天数": 3,
+      "排名": 8,
+      "日均积分": 3.33
+    },
+    {
+      "机号": "A09",
+      "班次": "乙班",
+      "总积分": 4,
+      "有效天数": 3,
+      "排名": 10,
+      "日均积分": 1.33
+    },
+    {
+      "机号": "A02",
+      "班次": "乙班",
+      "总积分": 2,
+      "有效天数": 4,
+      "排名": 11,
+      "日均积分": 0.5
+    },
+    {
+      "机号": "A01",
+      "班次": "甲班",
+      "总积分": 20,
+      "有效天数": 4,
+      "排名": 1,
+      "日均积分": 5.0
+    },
+    {
+      "机号": "A03",
+      "班次": "甲班",
+      "总积分": 16,
+      "有效天数": 4,
+      "排名": 3,
+      "日均积分": 4.0
+    },
+    {
+      "机号": "A04",
+      "班次": "甲班",
+      "总积分": 11,
+      "有效天数": 3,
+      "排名": 4,
+      "日均积分": 3.67
+    },
+    {
+      "机号": "A05",
+      "班次": "甲班",
+      "总积分": 10,
+      "有效天数": 3,
+      "排名": 6,
+      "日均积分": 3.33
+    },
+    {
+      "机号": "A09",
+      "班次": "甲班",
+      "总积分": 7,
+      "有效天数": 3,
+      "排名": 9,
+      "日均积分": 2.33
+    },
+    {
+      "机号": "A02",
+      "班次": "甲班",
+      "总积分": 0,
+      "有效天数": 4,
+      "排名": 12,
+      "日均积分": 0.0
+    }
+  ],
+  "daily_rankings": [
+    {
+      "机号": "A01",
+      "产量": 163.2,
+      "积分": 5,
+      "班次": "乙班",
+      "排名": 1,
+      "日期": 9.1
+    },
+    {
+      "机号": "A01",
+      "产量": 153.4,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.1
+    },
+    {
+      "机号": "A03",
+      "产量": 152.4,
+      "积分": 1,
+      "班次": "甲班",
+      "排名": 2,
+      "日期": 9.1
+    },
+    {
+      "机号": "A05",
+      "产量": 113.6,
+      "积分": 0,
+      "班次": "乙班",
+      "排名": 2,
+      "日期": 9.1
+    },
+    {
+      "机号": "A02",
+      "产量": 112.4,
+      "积分": 0,
+      "班次": "乙班",
+      "排名": 2,
+      "日期": 9.1
+    },
+    {
+      "机号": "A03",
+      "产量": 110.6,
+      "积分": 0,
+      "班次": "乙班",
+      "排名": 2,
+      "日期": 9.1
+    },
+    {
+      "机号": "A05",
+      "产量": 134.8,
+      "积分": 0,
+      "班次": "甲班",
+      "排名": 3,
+      "日期": 9.1
+    },
+    {
+      "机号": "A02",
+      "产量": 127.4,
+      "积分": 0,
+      "班次": "甲班",
+      "排名": 3,
+      "日期": 9.1
+    },
+    {
+      "机号": "A04",
+      "产量": "/",
+      "积分": "/",
+      "班次": "甲班",
+      "排名": "-",
+      "日期": 9.1
+    },
+    {
+      "机号": "A09",
+      "产量": "/",
+      "积分": "/",
+      "班次": "甲班",
+      "排名": "-",
+      "日期": 9.1
+    },
+    {
+      "机号": "A04",
+      "产量": "/",
+      "积分": "/",
+      "班次": "乙班",
+      "排名": "-",
+      "日期": 9.1
+    },
+    {
+      "机号": "A09",
+      "产量": "/",
+      "积分": "/",
+      "班次": "乙班",
+      "排名": "-",
+      "日期": 9.1
+    },
+    {
+      "机号": "A05",
+      "产量": 169.4,
+      "积分": 5,
+      "班次": "乙班",
+      "排名": 1,
+      "日期": 9.2
+    },
+    {
+      "机号": "A05",
+      "产量": 159.1,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.2
+    },
+    {
+      "机号": "A01",
+      "产量": 155.2,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.2
+    },
+    {
+      "机号": "A03",
+      "产量": 151.2,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.2
+    },
+    {
+      "机号": "A03",
+      "产量": 153.6,
+      "积分": 4,
+      "班次": "乙班",
+      "排名": 2,
+      "日期": 9.2
+    },
+    {
+      "机号": "A01",
+      "产量": 149.6,
+      "积分": 4,
+      "班次": "乙班",
+      "排名": 2,
+      "日期": 9.2
+    },
+    {
+      "机号": "A04",
+      "产量": 150.9,
+      "积分": 1,
+      "班次": "甲班",
+      "排名": 2,
+      "日期": 9.2
+    },
+    {
+      "机号": "A09",
+      "产量": 40.6,
+      "积分": 1,
+      "班次": "甲班",
+      "排名": 2,
+      "日期": 9.2
+    },
+    {
+      "机号": "A02",
+      "产量": 151.8,
+      "积分": 0,
+      "班次": "乙班",
+      "排名": 3,
+      "日期": 9.2
+    },
+    {
+      "机号": "A04",
+      "产量": 145.6,
+      "积分": 0,
+      "班次": "乙班",
+      "排名": 3,
+      "日期": 9.2
+    },
+    {
+      "机号": "A02",
+      "产量": 130.4,
+      "积分": 0,
+      "班次": "甲班",
+      "排名": 3,
+      "日期": 9.2
+    },
+    {
+      "机号": "A09",
+      "产量": 26,
+      "积分": 0,
+      "班次": "乙班",
+      "排名": 3,
+      "日期": 9.2
+    },
+    {
+      "机号": "A03",
+      "产量": 164.6,
+      "积分": 5,
+      "班次": "乙班",
+      "排名": 1,
+      "日期": 9.3
+    },
+    {
+      "机号": "A04",
+      "产量": 163.2,
+      "积分": 5,
+      "班次": "乙班",
+      "排名": 1,
+      "日期": 9.3
+    },
+    {
+      "机号": "A01",
+      "产量": 157.6,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.3
+    },
+    {
+      "机号": "A03",
+      "产量": 152.6,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.3
+    },
+    {
+      "机号": "A04",
+      "产量": 143.5,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.3
+    },
+    {
+      "机号": "A09",
+      "产量": 43.4,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.3
+    },
+    {
+      "机号": "A01",
+      "产量": 152.6,
+      "积分": 4,
+      "班次": "乙班",
+      "排名": 2,
+      "日期": 9.3
+    },
+    {
+      "机号": "A09",
+      "产量": 36.8,
+      "积分": 4,
+      "班次": "乙班",
+      "排名": 2,
+      "日期": 9.3
+    },
+    {
+      "机号": "A02",
+      "产量": 126.2,
+      "积分": 0,
+      "班次": "甲班",
+      "排名": 2,
+      "日期": 9.3
+    },
+    {
+      "机号": "A02",
+      "产量": 158.8,
+      "积分": 1,
+      "班次": "乙班",
+      "排名": 3,
+      "日期": 9.3
+    },
+    {
+      "机号": "A05",
+      "产量": "/",
+      "积分": "/",
+      "班次": "甲班",
+      "排名": "-",
+      "日期": 9.3
+    },
+    {
+      "机号": "A05",
+      "产量": "/",
+      "积分": "/",
+      "班次": "乙班",
+      "排名": "-",
+      "日期": 9.3
+    },
+    {
+      "机号": "A05",
+      "产量": 170.2,
+      "积分": 5,
+      "班次": "乙班",
+      "排名": 1,
+      "日期": 9.4
+    },
+    {
+      "机号": "A03",
+      "产量": 163.4,
+      "积分": 5,
+      "班次": "乙班",
+      "排名": 1,
+      "日期": 9.4
+    },
+    {
+      "机号": "A04",
+      "产量": 163,
+      "积分": 5,
+      "班次": "乙班",
+      "排名": 1,
+      "日期": 9.4
+    },
+    {
+      "机号": "A05",
+      "产量": 162.4,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.4
+    },
+    {
+      "机号": "A03",
+      "产量": 154,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.4
+    },
+    {
+      "机号": "A04",
+      "产量": 153.4,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.4
+    },
+    {
+      "机号": "A01",
+      "产量": 147.9,
+      "积分": 5,
+      "班次": "甲班",
+      "排名": 1,
+      "日期": 9.4
+    },
+    {
+      "机号": "A01",
+      "产量": 152.4,
+      "积分": 4,
+      "班次": "乙班",
+      "排名": 2,
+      "日期": 9.4
+    },
+    {
+      "机号": "A09",
+      "产量": 39,
+      "积分": 1,
+      "班次": "甲班",
+      "排名": 2,
+      "日期": 9.4
+    },
+    {
+      "机号": "A02",
+      "产量": 161.8,
+      "积分": 1,
+      "班次": "乙班",
+      "排名": 3,
+      "日期": 9.4
+    },
+    {
+      "机号": "A02",
+      "产量": 129.1,
+      "积分": 0,
+      "班次": "甲班",
+      "排名": 3,
+      "日期": 9.4
+    },
+    {
+      "机号": "A09",
+      "产量": 27,
+      "积分": 0,
+      "班次": "乙班",
+      "排名": 4,
+      "日期": 9.4
+    }
+  ],
+  "daily_scores": {
+    "9.1": [
+      {
+        "机号": "A01",
+        "甲班(中班)产量": 153.4,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 163.2,
+        "乙班(早班)积分": 5,
+        "总产量": 316.6,
+        "台时不足": false
+      },
+      {
+        "机号": "A02",
+        "甲班(中班)产量": 127.4,
+        "甲班(中班)积分": 0,
+        "乙班(早班)产量": 112.4,
+        "乙班(早班)积分": 0,
+        "总产量": 239.8,
+        "台时不足": false
+      },
+      {
+        "机号": "A03",
+        "甲班(中班)产量": 152.4,
+        "甲班(中班)积分": 1,
+        "乙班(早班)产量": 110.6,
+        "乙班(早班)积分": 0,
+        "总产量": 263,
+        "台时不足": false
+      },
+      {
+        "机号": "A04",
+        "甲班(中班)产量": "/",
+        "甲班(中班)积分": "/",
+        "乙班(早班)产量": "/",
+        "乙班(早班)积分": "/",
+        "总产量": "/",
+        "台时不足": true
+      },
+      {
+        "机号": "A05",
+        "甲班(中班)产量": 134.8,
+        "甲班(中班)积分": 0,
+        "乙班(早班)产量": 113.6,
+        "乙班(早班)积分": 0,
+        "总产量": 248.4,
+        "台时不足": false
+      },
+      {
+        "机号": "A09",
+        "甲班(中班)产量": "/",
+        "甲班(中班)积分": "/",
+        "乙班(早班)产量": "/",
+        "乙班(早班)积分": "/",
+        "总产量": "/",
+        "台时不足": true
+      }
+    ],
+    "9.2": [
+      {
+        "机号": "A01",
+        "甲班(中班)产量": 155.2,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 149.6,
+        "乙班(早班)积分": 4,
+        "总产量": 304.8,
+        "台时不足": false
+      },
+      {
+        "机号": "A02",
+        "甲班(中班)产量": 130.4,
+        "甲班(中班)积分": 0,
+        "乙班(早班)产量": 151.8,
+        "乙班(早班)积分": 0,
+        "总产量": 282.2,
+        "台时不足": false
+      },
+      {
+        "机号": "A03",
+        "甲班(中班)产量": 151.2,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 153.6,
+        "乙班(早班)积分": 4,
+        "总产量": 304.8,
+        "台时不足": false
+      },
+      {
+        "机号": "A04",
+        "甲班(中班)产量": 150.9,
+        "甲班(中班)积分": 1,
+        "乙班(早班)产量": 145.6,
+        "乙班(早班)积分": 0,
+        "总产量": 296.5,
+        "台时不足": false
+      },
+      {
+        "机号": "A05",
+        "甲班(中班)产量": 159.1,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 169.4,
+        "乙班(早班)积分": 5,
+        "总产量": 328.5,
+        "台时不足": false
+      },
+      {
+        "机号": "A09",
+        "甲班(中班)产量": 40.6,
+        "甲班(中班)积分": 1,
+        "乙班(早班)产量": 26.0,
+        "乙班(早班)积分": 0,
+        "总产量": 66.6,
+        "台时不足": false
+      }
+    ],
+    "9.3": [
+      {
+        "机号": "A01",
+        "甲班(中班)产量": 157.6,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 152.6,
+        "乙班(早班)积分": 4,
+        "总产量": 310.2,
+        "台时不足": false
+      },
+      {
+        "机号": "A02",
+        "甲班(中班)产量": 126.2,
+        "甲班(中班)积分": 0,
+        "乙班(早班)产量": 158.8,
+        "乙班(早班)积分": 1,
+        "总产量": 285,
+        "台时不足": false
+      },
+      {
+        "机号": "A03",
+        "甲班(中班)产量": 152.6,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 164.6,
+        "乙班(早班)积分": 5,
+        "总产量": 317.2,
+        "台时不足": false
+      },
+      {
+        "机号": "A04",
+        "甲班(中班)产量": 143.5,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 163.2,
+        "乙班(早班)积分": 5,
+        "总产量": 306.7,
+        "台时不足": false
+      },
+      {
+        "机号": "A05",
+        "甲班(中班)产量": "/",
+        "甲班(中班)积分": "/",
+        "乙班(早班)产量": "/",
+        "乙班(早班)积分": "/",
+        "总产量": "/",
+        "台时不足": true
+      },
+      {
+        "机号": "A09",
+        "甲班(中班)产量": 43.4,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 36.8,
+        "乙班(早班)积分": 4,
+        "总产量": 80.19999999999999,
+        "台时不足": false
+      }
+    ],
+    "9.4": [
+      {
+        "机号": "A01",
+        "甲班(中班)产量": 147.9,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 152.4,
+        "乙班(早班)积分": 4,
+        "总产量": 300.3,
+        "台时不足": false
+      },
+      {
+        "机号": "A02",
+        "甲班(中班)产量": 129.1,
+        "甲班(中班)积分": 0,
+        "乙班(早班)产量": 161.8,
+        "乙班(早班)积分": 1,
+        "总产量": 290.9,
+        "台时不足": false
+      },
+      {
+        "机号": "A03",
+        "甲班(中班)产量": 154.0,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 163.4,
+        "乙班(早班)积分": 5,
+        "总产量": 317.4,
+        "台时不足": false
+      },
+      {
+        "机号": "A04",
+        "甲班(中班)产量": 153.4,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 163.0,
+        "乙班(早班)积分": 5,
+        "总产量": 316.4,
+        "台时不足": false
+      },
+      {
+        "机号": "A05",
+        "甲班(中班)产量": 162.4,
+        "甲班(中班)积分": 5,
+        "乙班(早班)产量": 170.2,
+        "乙班(早班)积分": 5,
+        "总产量": 332.6,
+        "台时不足": false
+      },
+      {
+        "机号": "A09",
+        "甲班(中班)产量": 39.0,
+        "甲班(中班)积分": 1,
+        "乙班(早班)产量": 27.0,
+        "乙班(早班)积分": 0,
+        "总产量": 66.0,
+        "台时不足": false
+      }
+    ]
+  },
+  "last_updated": "2025-09-07 05:21:45"
+};</script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-trophy"></i> 生产竞赛排名系统</h1>
+            <p>实时展示各机台竞赛排名和积分统计</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('total')">
+                <i class="fas fa-medal"></i> 总分排名
+            </button>
+            <button class="tab" onclick="showTab('details')">
+                <i class="fas fa-chart-bar"></i> 详细数据
+            </button>
+        </div>
+
+        <div class="content">
+            <!-- 总分排名 -->
+            <div id="total-tab" class="tab-content">
+                <h2 class="section-title">
+                    <i class="fas fa-crown"></i> 总分排名
+                </h2>
+                <div class="ranking-table-container">
+                    <table class="ranking-table" id="total-ranking-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>机号</th>
+                                <th>班次</th>
+                                <th>总积分</th>
+                                <th>有效天数</th>
+                                <th>日均积分</th>
+                            </tr>
+                        </thead>
+                        <tbody id="total-ranking-body">
+                            <tr>
+                                <td colspan="6" class="loading">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- 详细数据 -->
+            <div id="details-tab" class="tab-content" style="display: none;">
+                <h2 class="section-title">
+                    <i class="fas fa-database"></i> 详细数据
+                </h2>
+                <div class="date-selector">
+                    <label for="details-date-select">选择日期：</label>
+                    <select id="details-date-select" onchange="updateDetailsData()">
+                        <option value="">请选择日期</option>
+                    </select>
+                </div>
+                <div class="ranking-table-container">
+                    <table class="ranking-table" id="details-table">
+                        <thead>
+                            <tr>
+                                <th>机号</th>
+                                <th>甲班(中班)产量</th>
+                                <th>甲班(中班)积分</th>
+                                <th>乙班(早班)产量</th>
+                                <th>乙班(早班)积分</th>
+                                <th>总产量</th>
+                                <th>台时状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="details-body">
+                            <tr>
+                                <td colspan="7" class="loading">请选择日期</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>数据更新时间：<span id="last-updated">-</span></p>
+            <p>&copy; 2024 生产竞赛排名系统</p>
+        </div>
+    </div>
+
+    <script>
+        let competitionData = null;
+
+        // 加载数据
+        async function loadData() {
+            try {
+                const response = await fetch('data.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                competitionData = await response.json();
+                console.log('数据加载成功:', competitionData);
+                initializePage();
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                showError(`加载数据失败: ${error.message}。请确保data.json文件存在且格式正确。`);
+                
+                // 尝试加载示例数据
+                try {
+                    const sampleResponse = await fetch('sample_data.json');
+                    if (sampleResponse.ok) {
+                        competitionData = await sampleResponse.json();
+                        console.log('使用示例数据');
+                        initializePage();
+                        showError('正在使用示例数据，请检查data.json文件');
+                    }
+                } catch (sampleError) {
+                    console.error('示例数据也加载失败:', sampleError);
+                }
+            }
+        }
+
+        // 初始化页面
+        function initializePage() {
+            if (!competitionData) return;
+
+            // 更新最后更新时间
+            document.getElementById('last-updated').textContent = competitionData.last_updated;
+
+            // 初始化总分排名
+            updateTotalRanking();
+
+            // 初始化日期选择器
+            initializeDateSelectors();
+
+            // 显示默认标签页
+            showTab('total');
+        }
+
+        // 更新总分排名
+        function updateTotalRanking() {
+            if (!competitionData) return;
+
+            const totalRankings = competitionData.total_rankings;
+            const tbody = document.getElementById('total-ranking-body');
+            
+            // 清空表格
+            tbody.innerHTML = '';
+
+            // 按排名排序，不按班次分组
+            const sortedRankings = totalRankings.sort((a, b) => a.排名 - b.排名);
+
+            // 添加所有排名
+            sortedRankings.forEach(ranking => {
+                const row = createTotalRankingRow(ranking);
+                tbody.appendChild(row);
+            });
+
+        }
+
+        // 获取带图标的排名
+        function getRankWithIcon(rank) {
+            if (rank === 1) return '🏆 1';
+            if (rank === 2) return '🥈 2';
+            if (rank === 3) return '🥉 3';
+            if (rank === 4) return '🥉 4';
+            return rank;
+        }
+
+        // 创建总分排名行
+        function createTotalRankingRow(ranking) {
+            const row = document.createElement('tr');
+            
+            const rankClass = ranking.排名 <= 3 ? `rank-${ranking.排名}` : '';
+            const scoreClass = getScoreClass(ranking.总积分);
+            const rankWithIcon = getRankWithIcon(ranking.排名);
+            
+            row.innerHTML = `
+                <td class="${rankClass}">${rankWithIcon}</td>
+                <td><strong>${ranking.机号}</strong></td>
+                <td>${ranking.班次}</td>
+                <td class="${scoreClass}">${ranking.总积分}</td>
+                <td>${ranking.有效天数}</td>
+                <td class="${scoreClass}">${ranking.日均积分}</td>
+            `;
+            
+            return row;
+        }
+
+
+        // 初始化日期选择器
+        function initializeDateSelectors() {
+            if (!competitionData) return;
+
+            const dates = Object.keys(competitionData.daily_scores).sort();
+            const detailsDateSelect = document.getElementById('details-date-select');
+
+            dates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date;
+                option.textContent = date;
+                detailsDateSelect.appendChild(option);
+            });
+        }
+
+
+        // 更新详细数据
+        function updateDetailsData() {
+            if (!competitionData) return;
+
+            const selectedDate = document.getElementById('details-date-select').value;
+            const tbody = document.getElementById('details-body');
+            
+            if (!selectedDate) {
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">请选择日期</td></tr>';
+                return;
+            }
+
+            const dailyScores = competitionData.daily_scores[selectedDate];
+            
+            tbody.innerHTML = '';
+            
+            // 动态获取列名
+            const sample = dailyScores[0];
+            const jiaProductionCol = Object.keys(sample).find(key => key.includes('甲班') && key.includes('产量'));
+            const jiaScoreCol = Object.keys(sample).find(key => key.includes('甲班') && key.includes('积分'));
+            const yiProductionCol = Object.keys(sample).find(key => key.includes('乙班') && key.includes('产量'));
+            const yiScoreCol = Object.keys(sample).find(key => key.includes('乙班') && key.includes('积分'));
+            
+            // 更新表头
+            const thead = document.querySelector('#details-table thead tr');
+            thead.innerHTML = `
+                <th>机号</th>
+                <th>${jiaProductionCol}</th>
+                <th>${jiaScoreCol}</th>
+                <th>${yiProductionCol}</th>
+                <th>${yiScoreCol}</th>
+                <th>总产量</th>
+                <th>台时状态</th>
+            `;
+            
+            dailyScores.forEach(score => {
+                const row = document.createElement('tr');
+                
+                const jiaScoreClass = score[jiaScoreCol] === '/' ? 'insufficient' : getScoreClass(parseInt(score[jiaScoreCol]) || 0);
+                const yiScoreClass = score[yiScoreCol] === '/' ? 'insufficient' : getScoreClass(parseInt(score[yiScoreCol]) || 0);
+                const statusClass = score.台时不足 ? 'insufficient' : '';
+                
+                row.innerHTML = `
+                    <td><strong>${score.机号}</strong></td>
+                    <td class="${score[jiaProductionCol] === '/' ? 'insufficient' : ''}">${score[jiaProductionCol]}</td>
+                    <td class="${jiaScoreClass}">${score[jiaScoreCol]}</td>
+                    <td class="${score[yiProductionCol] === '/' ? 'insufficient' : ''}">${score[yiProductionCol]}</td>
+                    <td class="${yiScoreClass}">${score[yiScoreCol]}</td>
+                    <td class="${score.总产量 === '/' ? 'insufficient' : ''}">${score.总产量}</td>
+                    <td class="${statusClass}">${score.台时不足 ? '台时不足' : '正常'}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // 获取积分样式类
+        function getScoreClass(score) {
+            if (score >= 5) return 'score-high';
+            if (score >= 3) return 'score-medium';
+            if (score > 0) return 'score-low';
+            return '';
+        }
+
+        // 显示标签页
+        function showTab(tabName) {
+            // 隐藏所有标签页
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // 移除所有标签的active类
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的标签页
+            document.getElementById(tabName + '-tab').style.display = 'block';
+            
+            // 添加active类到选中的标签
+            event.target.classList.add('active');
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.content').insertBefore(errorDiv, document.querySelector('.content').firstChild);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.competitionData) {
+                competitionData = window.competitionData;
+                initializePage();
+            } else {
+                loadData();
+            }
+        });
+    </script>
+</body>
+</html>
