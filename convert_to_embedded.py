@@ -98,8 +98,30 @@ def convert_to_embedded_html():
     # 替换原来的数据加载代码
     html_content = html_content.replace(
         '        // 页面加载完成后加载数据\n        document.addEventListener(\'DOMContentLoaded\', loadData);',
-        '        // 页面加载完成后初始化\n        document.addEventListener(\'DOMContentLoaded\', function() {\n            if (window.competitionData) {\n                competitionData = window.competitionData;\n                initializePage();\n            } else {\n                loadData();\n            }\n        });'
+        '        // 页面加载完成后初始化\n        document.addEventListener(\'DOMContentLoaded\', function() {\n            if (window.competitionData) {\n                competitionData = window.competitionData;\n                initializePage();\n            } else {\n                showError(\'数据加载失败\');\n            }\n        });'
     )
+    
+    # 移除loadData函数，因为数据已经嵌入
+    loadData_start = '        async function loadData() {'
+    loadData_end = '        }'
+    
+    start_pos = html_content.find(loadData_start)
+    if start_pos != -1:
+        # 找到loadData函数结束的位置
+        brace_count = 0
+        pos = start_pos
+        while pos < len(html_content):
+            if html_content[pos] == '{':
+                brace_count += 1
+            elif html_content[pos] == '}':
+                brace_count -= 1
+                if brace_count == 0:
+                    # 找到匹配的结束括号
+                    end_pos = pos + 1
+                    # 替换整个函数
+                    html_content = html_content[:start_pos] + '        // loadData函数已移除，数据已嵌入到HTML中' + html_content[end_pos:]
+                    break
+            pos += 1
     
     # 确保参赛机台数显示为12
     html_content = html_content.replace(

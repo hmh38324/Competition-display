@@ -929,7 +929,7 @@
       }
     ]
   },
-  "last_updated": "2025-09-07 05:21:45"
+  "last_updated": "2025-09-07 05:35:21"
 };</script>
 </head>
 <body>
@@ -1020,33 +1020,7 @@
         let competitionData = null;
 
         // 加载数据
-        async function loadData() {
-            try {
-                const response = await fetch('data.json');
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                competitionData = await response.json();
-                console.log('数据加载成功:', competitionData);
-                initializePage();
-            } catch (error) {
-                console.error('加载数据失败:', error);
-                showError(`加载数据失败: ${error.message}。请确保data.json文件存在且格式正确。`);
-                
-                // 尝试加载示例数据
-                try {
-                    const sampleResponse = await fetch('sample_data.json');
-                    if (sampleResponse.ok) {
-                        competitionData = await sampleResponse.json();
-                        console.log('使用示例数据');
-                        initializePage();
-                        showError('正在使用示例数据，请检查data.json文件');
-                    }
-                } catch (sampleError) {
-                    console.error('示例数据也加载失败:', sampleError);
-                }
-            }
-        }
+        // loadData函数已移除，数据已嵌入到HTML中
 
         // 初始化页面
         function initializePage() {
@@ -1229,7 +1203,7 @@
                 competitionData = window.competitionData;
                 initializePage();
             } else {
-                loadData();
+                showError('数据加载失败');
             }
         });
     </script>
