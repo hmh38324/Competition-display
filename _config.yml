@@ -1,0 +1,23 @@
+# GitHub Pages configuration
+baseurl: "/Competition-display"
+url: "https://www.biboran.top"
+
+# Site settings
+title: "A线聚力攻坚 提质达效劳动竞赛"
+description: "实时展示各机台竞赛排名和积分统计"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+# Exclude files from processing
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
