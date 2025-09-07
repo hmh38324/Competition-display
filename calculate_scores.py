@@ -78,7 +78,7 @@ def calculate_scores(data):
             continue
         
         # 计算总产量
-        total_production = jia_actual + yi_actual
+        total_production = round(jia_actual + yi_actual, 1)
         
         # 根据机号确定积分规则
         if machine in ['A01', 'A02', 'A03', 'A04', 'A05']:
