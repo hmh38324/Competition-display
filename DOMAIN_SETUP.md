@@ -11,6 +11,7 @@
 2. 找到Pages部分
 3. 在Custom domain中输入: `www.biboran.top`
 4. 确保"Enforce HTTPS"已启用
+5. 部署源设置为: Deploy from a branch → main → / (root)
 
 ### 2. 域名DNS设置
 在你的域名提供商处设置以下DNS记录：
@@ -23,12 +24,13 @@
 
 ### 3. 仓库文件配置
 - `CNAME` 文件: 包含自定义域名
-- `_config.yml` 文件: 配置基础URL
+- `.nojekyll` 文件: 禁用Jekyll处理
+- `index.html` 文件: 根目录重定向页面
 - `Competition-display/` 目录: 包含子路径的HTML文件
 
 ## 访问方式
-- **新地址**: https://www.biboran.top/Competition-display/
-- **根地址**: https://www.biboran.top (显示根目录的index.html)
+- **子路径地址**: https://www.biboran.top/Competition-display/ (主要访问地址)
+- **根地址**: https://www.biboran.top (自动跳转到子路径)
 
 ## 注意事项
 1. DNS更改可能需要几分钟到几小时生效
