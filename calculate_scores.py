@@ -135,7 +135,7 @@ def calculate_scores(data):
     
     return pd.DataFrame(scores)
 
-def calculate_total_scores(all_daily_scores):
+def calculate_total_scores(all_daily_scores, negative_data=None):
     """
     计算每个机台的总分
     """
@@ -152,7 +152,9 @@ def calculate_total_scores(all_daily_scores):
                         '甲班总分': 0,
                         '乙班总分': 0,
                         '总积分': 0,
-                        '有效天数': 0
+                        '有效天数': 0,
+                        '甲班否样次数': 0,
+                        '乙班否样次数': 0
                     }
                 
                 # 动态获取甲班和乙班的积分列名
@@ -169,6 +171,19 @@ def calculate_total_scores(all_daily_scores):
                     total_scores[machine]['乙班总分'] += row[yi_score_col]
                     total_scores[machine]['总积分'] += row[jia_score_col] + row[yi_score_col]
                     total_scores[machine]['有效天数'] += 1
+    
+    # 添加否样或批量追溯次数
+    if negative_data is not None:
+        for _, row in negative_data.iterrows():
+            machine = row['机号']
+            shift = row['班次']
+            negative_count = row['否样或批量追溯']
+            
+            if machine in total_scores:
+                if shift == '甲班':
+                    total_scores[machine]['甲班否样次数'] = negative_count
+                elif shift == '乙班':
+                    total_scores[machine]['乙班否样次数'] = negative_count
     
     return total_scores
 
@@ -317,27 +332,43 @@ def process_excel_file(file_path):
             print(f"  - 当日所有机台台时不足，不计入竞赛")
             print(f"  - 台时不足机台数: {insufficient_count}")
     
+    # 读取negative文件
+    negative_data = None
+    try:
+        negative_data = pd.read_excel('negative.xlsx')
+        print(f"成功读取negative文件，包含 {len(negative_data)} 条记录")
+    except FileNotFoundError:
+        print("警告: 未找到negative.xlsx文件，将不进行扣分计算")
+    except Exception as e:
+        print(f"警告: 读取negative.xlsx文件失败: {e}")
+    
     # 计算总分
-    total_scores = calculate_total_scores(all_daily_scores)
+    total_scores = calculate_total_scores(all_daily_scores, negative_data)
     
     # 创建总分排名表
     total_rankings = []
     for machine, scores in total_scores.items():
         # 甲班总分排名
+        jia_negative_count = scores.get('甲班否样次数', 0)
+        jia_adjusted_score = max(0, scores['甲班总分'] - jia_negative_count)  # 扣分后不能为负数
         total_rankings.append({
             '机号': machine,
             '班次': '甲班',
             '总积分': scores['甲班总分'],
             '有效天数': scores['有效天数'],
-            '平均积分': round(scores['甲班总分'] / scores['有效天数'], 2) if scores['有效天数'] > 0 else 0
+            '否样次数': jia_negative_count,
+            '平均积分': round(jia_adjusted_score / scores['有效天数'], 2) if scores['有效天数'] > 0 else 0
         })
         # 乙班总分排名
+        yi_negative_count = scores.get('乙班否样次数', 0)
+        yi_adjusted_score = max(0, scores['乙班总分'] - yi_negative_count)  # 扣分后不能为负数
         total_rankings.append({
             '机号': machine,
             '班次': '乙班',
             '总积分': scores['乙班总分'],
             '有效天数': scores['有效天数'],
-            '平均积分': round(scores['乙班总分'] / scores['有效天数'], 2) if scores['有效天数'] > 0 else 0
+            '否样次数': yi_negative_count,
+            '平均积分': round(yi_adjusted_score / scores['有效天数'], 2) if scores['有效天数'] > 0 else 0
         })
     
     # 计算总分排名（甲班乙班一起按日均积分排名）

@@ -147,6 +147,7 @@
         .score-low { color: #e74c3c; font-weight: bold; }
 
         .insufficient { color: #95a5a6; font-style: italic; }
+        .negative-count { color: #e74c3c; font-weight: bold; }
 
 
         .date-selector {
@@ -963,6 +964,7 @@
                                 <th>班次</th>
                                 <th>总积分</th>
                                 <th>有效天数</th>
+                                <th>否样次数</th>
                                 <th>日均积分</th>
                             </tr>
                         </thead>
@@ -1083,6 +1085,7 @@
                 <td>${ranking.班次}</td>
                 <td class="${scoreClass}">${ranking.总积分}</td>
                 <td>${ranking.有效天数}</td>
+                <td class="${ranking.否样次数 > 0 ? 'negative-count' : ''}">${ranking.否样次数 || 0}</td>
                 <td class="${scoreClass}">${ranking.日均积分}</td>
             `;
             
