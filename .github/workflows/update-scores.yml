@@ -40,13 +40,15 @@ jobs:
         
     - name: 更新GitHub Pages
       run: |
+        cp index_embedded.html index.html
         cp index_embedded.html github-pages/index.html
-        echo "已将index_embedded.html复制到github-pages/index.html"
+        echo "已将index_embedded.html复制到根目录index.html和github-pages/index.html"
         
     - name: 提交更改
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
+        git add index.html
         git add github-pages/index.html
         git add 积分排名结果.xlsx
         git diff --staged --quiet || git commit -m "自动更新分数和排名 - $(date '+%Y-%m-%d %H:%M:%S')"
