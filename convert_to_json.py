@@ -52,6 +52,30 @@ def convert_excel_to_json():
         if '日均积分' not in ranking and '平均积分' in ranking:
             ranking['日均积分'] = ranking['平均积分']
     
+    # 读取negative.xlsx文件中的否样数据
+    negative_data = None
+    try:
+        negative_df = pd.read_excel('negative.xlsx')
+        negative_data = negative_df.to_dict('records')
+        print(f"成功读取negative.xlsx文件，包含 {len(negative_data)} 条记录")
+    except FileNotFoundError:
+        print("警告: 未找到negative.xlsx文件")
+    except Exception as e:
+        print(f"警告: 读取negative.xlsx文件失败: {e}")
+    
+    # 将否样数据合并到总分排名中
+    if negative_data:
+        # 创建否样数据的查找字典
+        negative_lookup = {}
+        for item in negative_data:
+            key = f"{item['机号']}_{item['班次']}"
+            negative_lookup[key] = item['否样或批量追溯']
+        
+        # 更新总分排名中的否样次数
+        for ranking in data['total_rankings']:
+            key = f"{ranking['机号']}_{ranking['班次']}"
+            ranking['否样次数'] = negative_lookup.get(key, 0)
+    
     # 保存为JSON文件
     json_file = '/Users/apple/Documents/cursor/test2/data.json'
     with open(json_file, 'w', encoding='utf-8') as f:

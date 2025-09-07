@@ -218,9 +218,13 @@
             }
         }
     </style>
-
-
-
+        "总产量": 66.0,
+        "台时不足": false
+      }
+    ]
+  },
+  "last_updated": "2025-09-07 05:49:30"
+};</script>
 <script>window.competitionData = {
   "total_rankings": [
     {
@@ -282,9 +286,9 @@
       "班次": "甲班",
       "总积分": 20,
       "有效天数": 4,
-      "否样次数": 1,
+      "否样次数": 0,
       "排名": 1,
-      "日均积分": 4.75
+      "日均积分": 5.0
     },
     {
       "机号": "A03",
@@ -944,7 +948,7 @@
       }
     ]
   },
-  "last_updated": "2025-09-07 14:14:14"
+  "last_updated": "2025-09-07 13:47:35"
 };</script>
 </head>
 <body>
@@ -978,13 +982,12 @@
                                 <th>班次</th>
                                 <th>总积分</th>
                                 <th>有效天数</th>
-                                <th>否样与批量追溯</th>
                                 <th>日均积分</th>
                             </tr>
                         </thead>
                         <tbody id="total-ranking-body">
                             <tr>
-                                <td colspan="7" class="loading">加载中...</td>
+                                <td colspan="6" class="loading">加载中...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1093,17 +1096,12 @@
             const scoreClass = getScoreClass(ranking.总积分);
             const rankWithIcon = getRankWithIcon(ranking.排名);
             
-            // 计算否样与批量追溯信息
-            const negativeCount = ranking.否样次数 || 0;
-            const traceabilityText = negativeCount.toString();
-            
             row.innerHTML = `
                 <td class="${rankClass}">${rankWithIcon}</td>
                 <td><strong>${ranking.机号}</strong></td>
                 <td>${ranking.班次}</td>
                 <td class="${scoreClass}">${ranking.总积分}</td>
                 <td>${ranking.有效天数}</td>
-                <td>${traceabilityText}</td>
                 <td class="${scoreClass}">${ranking.日均积分}</td>
             `;
             
