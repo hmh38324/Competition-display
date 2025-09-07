@@ -23,11 +23,12 @@
 
 ### 3. 仓库文件配置
 - `CNAME` 文件: 包含自定义域名
-- `_config.yml` 文件: 配置baseurl为 `/Competition-display`
+- `_config.yml` 文件: 配置基础URL
+- `Competition-display/` 目录: 包含子路径的HTML文件
 
 ## 访问方式
 - **新地址**: https://www.biboran.top/Competition-display/
-- **旧地址**: https://www.biboran.top (将不再显示此项目)
+- **根地址**: https://www.biboran.top (显示根目录的index.html)
 
 ## 注意事项
 1. DNS更改可能需要几分钟到几小时生效

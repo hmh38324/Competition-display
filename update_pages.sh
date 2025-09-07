@@ -14,12 +14,14 @@ python3 convert_to_embedded.py
 echo "3. 更新GitHub Pages..."
 cp index_embedded.html index.html
 cp index_embedded.html github-pages/index.html
-echo "   已将index_embedded.html复制到根目录index.html和github-pages/index.html"
+cp index_embedded.html Competition-display/index.html
+echo "   已将index_embedded.html复制到根目录index.html、github-pages/index.html和Competition-display/index.html"
 
 # 提交更改
 echo "4. 提交更改..."
 git add index.html
 git add github-pages/index.html
+git add Competition-display/index.html
 git add 积分排名结果.xlsx
 git commit -m "更新分数和排名 - $(date '+%Y-%m-%d %H:%M:%S')"
 git push
