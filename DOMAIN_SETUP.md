@@ -25,12 +25,12 @@
 ### 3. 仓库文件配置
 - `CNAME` 文件: 包含自定义域名
 - `.nojekyll` 文件: 禁用Jekyll处理
-- `index.html` 文件: 根目录欢迎页面
+- 根目录无 `index.html` 文件: 确保根域名返回404
 - `Competition-display/` 目录: 包含子路径的HTML文件
 
 ## 访问方式
 - **竞赛系统地址**: https://www.biboran.top/Competition-display/ (主要访问地址)
-- **根地址**: https://www.biboran.top (显示欢迎页面，提供进入竞赛系统的链接)
+- **根地址**: https://www.biboran.top (返回404错误页面)
 
 ## 注意事项
 1. DNS更改可能需要几分钟到几小时生效
