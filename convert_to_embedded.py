@@ -12,8 +12,10 @@ def convert_to_embedded_html():
     """
     将JSON数据嵌入到HTML文件中
     """
-    # 读取Excel文件
-    excel_file = '/Users/apple/Documents/cursor/test2/积分排名结果.xlsx'
+    # 使用仓库相对路径，兼容 GitHub Actions 运行环境
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+    # 读取Excel文件（由 calculate_scores.py 生成）
+    excel_file = os.path.join(repo_root, '积分排名结果.xlsx')
     
     if not os.path.exists(excel_file):
         print("Excel文件不存在，使用示例数据")
@@ -112,8 +114,9 @@ def convert_to_embedded_html():
                 key = f"{ranking['机号']}_{ranking['班次']}"
                 ranking['否样次数'] = negative_lookup.get(key, 0)
     
-    # 读取HTML模板
-    with open('/Users/apple/Documents/cursor/test2/index.html', 'r', encoding='utf-8') as f:
+    # 读取HTML模板（仓库根目录）
+    template_path = os.path.join(repo_root, 'index.html')
+    with open(template_path, 'r', encoding='utf-8') as f:
         html_content = f.read()
     
     # 将数据嵌入到HTML中
@@ -161,8 +164,8 @@ def convert_to_embedded_html():
     # 在</head>标签前插入新的数据脚本
     html_content = html_content.replace('</head>', f'{data_script}\n</head>')
     
-    # 保存嵌入数据的HTML文件
-    output_file = '/Users/apple/Documents/cursor/test2/index_embedded.html'
+    # 保存嵌入数据的HTML文件（仓库根目录）
+    output_file = os.path.join(repo_root, 'index_embedded.html')
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(html_content)
     

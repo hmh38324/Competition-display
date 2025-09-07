@@ -396,7 +396,9 @@ def main():
     """
     主函数
     """
-    file_path = '/Users/apple/Documents/cursor/test2/data.xlsx'
+    # 使用仓库相对路径，兼容本地与 GitHub Actions
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(repo_root, 'data.xlsx')
     
     if not os.path.exists(file_path):
         print(f"文件不存在: {file_path}")
@@ -408,7 +410,7 @@ def main():
     results = process_excel_file(file_path)
     
     # 输出结果到新的Excel文件
-    output_file = '/Users/apple/Documents/cursor/test2/积分排名结果.xlsx'
+    output_file = os.path.join(repo_root, '积分排名结果.xlsx')
     
     with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
         # 写入总分排名
