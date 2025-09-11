@@ -1113,7 +1113,17 @@
         function initializeDateSelectors() {
             if (!competitionData) return;
 
-            const dates = Object.keys(competitionData.daily_scores).sort();
+            // 自定义日期排序函数，处理"9.1", "9.2", "9.10"等格式
+            const dates = Object.keys(competitionData.daily_scores).sort((a, b) => {
+                const [monthA, dayA] = a.split('.').map(Number);
+                const [monthB, dayB] = b.split('.').map(Number);
+                
+                // 先比较月份，再比较日期
+                if (monthA !== monthB) {
+                    return monthA - monthB;
+                }
+                return dayA - dayB;
+            });
             const detailsDateSelect = document.getElementById('details-date-select');
 
             dates.forEach(date => {
