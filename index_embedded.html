@@ -266,6 +266,7 @@
 
 
 
+
 <script>window.competitionData = {
   "total_rankings": [
     {
@@ -316,11 +317,11 @@
     {
       "机号": "A02",
       "班次": "乙班",
-      "总积分": 14,
+      "总积分": 13,
       "有效天数": 8,
       "否样次数": 0,
       "排名": 11,
-      "日均积分": 1.75
+      "日均积分": 1.62
     },
     {
       "机号": "A03",
@@ -1291,9 +1292,17 @@
       "日期": 9.1
     },
     {
+      "机号": "A09",
+      "产量": 38.2,
+      "积分": 0,
+      "班次": "乙班",
+      "排名": 2,
+      "日期": 9.1
+    },
+    {
       "机号": "A02",
-      "产量": 146.1,
-      "积分": 1,
+      "产量": 1.461,
+      "积分": 0,
       "班次": "乙班",
       "排名": 2,
       "日期": 9.1
@@ -1303,14 +1312,6 @@
       "产量": 119.6,
       "积分": 0,
       "班次": "甲班",
-      "排名": 3,
-      "日期": 9.1
-    },
-    {
-      "机号": "A09",
-      "产量": 38.2,
-      "积分": 0,
-      "班次": "乙班",
       "排名": 3,
       "日期": 9.1
     },
@@ -1858,9 +1859,9 @@
         "机号": "A02",
         "甲班(早班)产量": 119.6,
         "甲班(早班)积分": 0,
-        "乙班(中班)产量": 146.1,
-        "乙班(中班)积分": 1,
-        "总产量": 265.7,
+        "乙班(中班)产量": 1.461,
+        "乙班(中班)积分": 0,
+        "总产量": 121.1,
         "台时不足": false
       },
       {
@@ -1901,8 +1902,21 @@
       }
     ]
   },
-  "last_updated": "2025-09-11 13:57:43"
+  "last_updated": "2025-09-11 14:06:44"
 };</script>
+<script>
+(function(){
+    try {
+        var APP_VERSION = (window.competitionData && window.competitionData.last_updated) || '';
+        if (!APP_VERSION) return;
+        var url = new URL(window.location.href);
+        if (url.searchParams.get('v') !== APP_VERSION) {
+            url.searchParams.set('v', APP_VERSION);
+            window.location.replace(url.toString());
+        }
+    } catch(e) {}
+})();
+</script>
 </head>
 <body>
     <div class="container">

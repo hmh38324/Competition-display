@@ -1904,6 +1904,19 @@
   },
   "last_updated": "2025-09-11 14:06:44"
 };</script>
+<script>
+(function(){
+    try {
+        var APP_VERSION = (window.competitionData && window.competitionData.last_updated) || '';
+        if (!APP_VERSION) return;
+        var url = new URL(window.location.href);
+        if (url.searchParams.get('v') !== APP_VERSION) {
+            url.searchParams.set('v', APP_VERSION);
+            window.location.replace(url.toString());
+        }
+    } catch(e) {}
+})();
+</script>
 </head>
 <body>
     <div class="container">
