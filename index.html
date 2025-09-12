@@ -1505,7 +1505,8 @@
         "乙班(早班)产量": "/",
         "乙班(早班)积分": "/",
         "总产量": "/",
-        "台时不足": true
+        "台时不足": false,
+        "生产牌号不符": true
       }
     ],
     "9.2": [
@@ -2065,7 +2066,8 @@
         "乙班(中班)产量": "/",
         "乙班(中班)积分": "/",
         "总产量": "/",
-        "台时不足": true
+        "台时不足": false,
+        "生产牌号不符": true
       }
     ]
   },
@@ -2303,7 +2305,17 @@
                 
                 const jiaScoreClass = score[jiaScoreCol] === '/' ? 'insufficient' : getScoreClass(parseInt(score[jiaScoreCol]) || 0);
                 const yiScoreClass = score[yiScoreCol] === '/' ? 'insufficient' : getScoreClass(parseInt(score[yiScoreCol]) || 0);
-                const statusClass = score.台时不足 ? 'insufficient' : '';
+                // 台时状态判断逻辑
+                let statusText = '正常';
+                let statusClass = '';
+                
+                if (score.生产牌号不符) {
+                    statusText = '生产牌号不符';
+                    statusClass = 'insufficient';
+                } else if (score.台时不足) {
+                    statusText = '台时不足';
+                    statusClass = 'insufficient';
+                }
                 
                 row.innerHTML = `
                     <td><strong>${score.机号}</strong></td>
@@ -2312,7 +2324,7 @@
                     <td class="${score[yiProductionCol] === '/' ? 'insufficient' : ''}">${score[yiProductionCol]}</td>
                     <td class="${yiScoreClass}">${score[yiScoreCol]}</td>
                     <td class="${score.总产量 === '/' ? 'insufficient' : ''}">${score.总产量}</td>
-                    <td class="${statusClass}">${score.台时不足 ? '台时不足' : '正常'}</td>
+                    <td class="${statusClass}">${statusText}</td>
                 `;
                 
                 tbody.appendChild(row);
