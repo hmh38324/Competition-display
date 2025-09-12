@@ -35,9 +35,32 @@ def calculate_scores(data):
         yi_plan = row['计划.1'] if '计划.1' in row else 0
         yi_actual = row['报工.1'] if '报工.1' in row else None
         
+        # 检查报工数据是否为字符串（台时不足、生产牌号不符等）
+        jia_is_string = isinstance(jia_actual, str)
+        yi_is_string = isinstance(yi_actual, str)
+        
         # 检查是否有报工数据为空（台时不足）
-        jia_insufficient = pd.isna(jia_actual) or jia_actual == 0
-        yi_insufficient = pd.isna(yi_actual) or yi_actual == 0
+        jia_insufficient = pd.isna(jia_actual) or jia_actual == 0 or jia_is_string
+        yi_insufficient = pd.isna(yi_actual) or yi_actual == 0 or yi_is_string
+        
+        # 检查是否为生产牌号不符
+        jia_brand_mismatch = jia_is_string and jia_actual == '生产牌号不符'
+        yi_brand_mismatch = yi_is_string and yi_actual == '生产牌号不符'
+        
+        # 检查是否有生产牌号不符的情况
+        if jia_brand_mismatch or yi_brand_mismatch:
+            # 有生产牌号不符的情况
+            scores.append({
+                '机号': machine,
+                f'甲班({jia_shift})产量': jia_actual if jia_is_string else '/',
+                f'甲班({jia_shift})积分': '/',
+                f'乙班({yi_shift})产量': yi_actual if yi_is_string else '/',
+                f'乙班({yi_shift})积分': '/',
+                '总产量': '/',
+                '台时不足': False,
+                '生产牌号不符': True
+            })
+            continue
         
         # 如果甲班或乙班报工数据为空，则当天台时不足
         if jia_insufficient and yi_insufficient:
@@ -76,6 +99,10 @@ def calculate_scores(data):
                 '台时不足': True
             })
             continue
+        
+        # 确保报工数据是数值类型
+        jia_actual = float(jia_actual) if not pd.isna(jia_actual) else 0
+        yi_actual = float(yi_actual) if not pd.isna(yi_actual) else 0
         
         # 计算总产量
         total_production = round(jia_actual + yi_actual, 1)
@@ -152,25 +179,45 @@ def calculate_total_scores(all_daily_scores, negative_data=None):
                         '甲班总分': 0,
                         '乙班总分': 0,
                         '总积分': 0,
+                        '甲班总产量': 0,
+                        '乙班总产量': 0,
+                        '总产量': 0,
                         '有效天数': 0,
                         '甲班否样次数': 0,
                         '乙班否样次数': 0
                     }
                 
-                # 动态获取甲班和乙班的积分列名
+                # 动态获取甲班和乙班的积分和产量列名
                 jia_score_col = None
                 yi_score_col = None
+                jia_production_col = None
+                yi_production_col = None
+                
                 for col in scores_df.columns:
                     if '甲班' in col and '积分' in col:
                         jia_score_col = col
                     elif '乙班' in col and '积分' in col:
                         yi_score_col = col
+                    elif '甲班' in col and '产量' in col:
+                        jia_production_col = col
+                    elif '乙班' in col and '产量' in col:
+                        yi_production_col = col
                 
-                if jia_score_col and yi_score_col:
-                    total_scores[machine]['甲班总分'] += row[jia_score_col]
-                    total_scores[machine]['乙班总分'] += row[yi_score_col]
-                    total_scores[machine]['总积分'] += row[jia_score_col] + row[yi_score_col]
-                    total_scores[machine]['有效天数'] += 1
+                if jia_score_col and yi_score_col and jia_production_col and yi_production_col:
+                    # 只对数值类型的积分和产量进行累加
+                    jia_score = pd.to_numeric(row[jia_score_col], errors='coerce')
+                    yi_score = pd.to_numeric(row[yi_score_col], errors='coerce')
+                    jia_production = pd.to_numeric(row[jia_production_col], errors='coerce')
+                    yi_production = pd.to_numeric(row[yi_production_col], errors='coerce')
+                    
+                    if not pd.isna(jia_score) and not pd.isna(yi_score) and not pd.isna(jia_production) and not pd.isna(yi_production):
+                        total_scores[machine]['甲班总分'] += jia_score
+                        total_scores[machine]['乙班总分'] += yi_score
+                        total_scores[machine]['总积分'] += jia_score + yi_score
+                        total_scores[machine]['甲班总产量'] += jia_production
+                        total_scores[machine]['乙班总产量'] += yi_production
+                        total_scores[machine]['总产量'] += jia_production + yi_production
+                        total_scores[machine]['有效天数'] += 1
     
     # 添加否样或批量追溯次数
     if negative_data is not None:
@@ -325,8 +372,11 @@ def process_excel_file(file_path):
                     yi_score_col = col
             
             if jia_score_col and yi_score_col:
-                print(f"  - 甲班最高积分: {valid_scores[jia_score_col].max()}")
-                print(f"  - 乙班最高积分: {valid_scores[yi_score_col].max()}")
+                # 过滤掉字符串值，只计算数值类型的积分
+                jia_numeric_scores = pd.to_numeric(valid_scores[jia_score_col], errors='coerce')
+                yi_numeric_scores = pd.to_numeric(valid_scores[yi_score_col], errors='coerce')
+                print(f"  - 甲班最高积分: {jia_numeric_scores.max()}")
+                print(f"  - 乙班最高积分: {yi_numeric_scores.max()}")
             print(f"  - 台时不足机台数: {insufficient_count}")
         else:
             print(f"  - 当日所有机台台时不足，不计入竞赛")
@@ -357,6 +407,7 @@ def process_excel_file(file_path):
             '总积分': scores['甲班总分'],
             '有效天数': scores['有效天数'],
             '否样次数': jia_negative_count,
+            '日均产量': round(scores['甲班总产量'] / scores['有效天数'], 1) if scores['有效天数'] > 0 else 0,
             '平均积分': round(jia_adjusted_score / scores['有效天数'], 2) if scores['有效天数'] > 0 else 0
         })
         # 乙班总分排名
@@ -368,22 +419,23 @@ def process_excel_file(file_path):
             '总积分': scores['乙班总分'],
             '有效天数': scores['有效天数'],
             '否样次数': yi_negative_count,
+            '日均产量': round(scores['乙班总产量'] / scores['有效天数'], 1) if scores['有效天数'] > 0 else 0,
             '平均积分': round(yi_adjusted_score / scores['有效天数'], 2) if scores['有效天数'] > 0 else 0
         })
     
-    # 计算总分排名（甲班乙班一起按日均积分排名）
+    # 计算总分排名（甲班乙班一起按日均积分排名，相同时按日均产量排名）
     if total_rankings:
         total_rankings_df = pd.DataFrame(total_rankings)
         
-        # 所有机台一起按日均积分排序
-        total_rankings_df = total_rankings_df.sort_values(['平均积分', '总积分'], ascending=[False, False])
+        # 所有机台一起按日均积分和日均产量排序
+        total_rankings_df = total_rankings_df.sort_values(['平均积分', '日均产量', '总积分'], ascending=[False, False, False])
         
         # 重新计算排名，确保按排序后的顺序
         total_rankings_df = total_rankings_df.reset_index(drop=True)
         total_rankings_df['排名'] = total_rankings_df.index + 1
         
         # 按班次和排名排序显示
-        total_rankings_df = total_rankings_df.sort_values(['班次', '排名', '平均积分', '总积分'], ascending=[True, True, False, False])
+        total_rankings_df = total_rankings_df.sort_values(['班次', '排名', '平均积分', '日均产量'], ascending=[True, True, False, False])
         results['总分排名'] = total_rankings_df
     
     # 合并所有日期的排名
