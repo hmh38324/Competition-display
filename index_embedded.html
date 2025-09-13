@@ -285,6 +285,7 @@
 
 
 
+
 <script>window.competitionData = {
   "total_rankings": [
     {
@@ -2090,7 +2091,7 @@
       }
     ]
   },
-  "last_updated": "2025-09-12 12:02:32"
+  "last_updated": "2025-09-12 12:14:23"
 };</script>
 </head>
 <body>
@@ -2149,6 +2150,27 @@
                     <select id="details-date-select" onchange="updateDetailsData()">
                         <option value="">请选择日期</option>
                     </select>
+                    
+                    <label for="machine-select" style="margin-left: 20px;">选择机台：</label>
+                    <select id="machine-select" onchange="updateMachineData()">
+                        <option value="">请选择机台</option>
+                        <optgroup label="甲班">
+                            <option value="A01-甲班">A01</option>
+                            <option value="A02-甲班">A02</option>
+                            <option value="A03-甲班">A03</option>
+                            <option value="A04-甲班">A04</option>
+                            <option value="A05-甲班">A05</option>
+                            <option value="A09-甲班">A09</option>
+                        </optgroup>
+                        <optgroup label="乙班">
+                            <option value="A01-乙班">A01</option>
+                            <option value="A02-乙班">A02</option>
+                            <option value="A03-乙班">A03</option>
+                            <option value="A04-乙班">A04</option>
+                            <option value="A05-乙班">A05</option>
+                            <option value="A09-乙班">A09</option>
+                        </optgroup>
+                    </select>
                 </div>
                 <div class="ranking-table-container">
                     <table class="ranking-table" id="details-table">
@@ -2169,6 +2191,34 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                
+                <!-- 机台历史数据表格 -->
+                <div class="ranking-table-container" id="machine-history-container" style="display: none;">
+                    <h3 style="margin: 20px 0 10px 0; color: #2c3e50;">机台历史数据</h3>
+                    <table class="ranking-table" id="machine-history-table">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>班次</th>
+                                <th>产量</th>
+                                <th>积分</th>
+                                <th>台时状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="machine-history-body">
+                        </tbody>
+                    </table>
+                    <div id="machine-summary" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <h4 style="margin-bottom: 10px; color: #2c3e50;">统计汇总</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div><strong>总积分：</strong><span id="total-score">-</span></div>
+                            <div><strong>有效天数：</strong><span id="valid-days">-</span></div>
+                            <div><strong>日均产量：</strong><span id="avg-production">-</span></div>
+                            <div><strong>日均积分：</strong><span id="avg-score">-</span></div>
+                            <div><strong>当前排名：</strong><span id="current-ranking">-</span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2293,6 +2343,10 @@
             const selectedDate = document.getElementById('details-date-select').value;
             const tbody = document.getElementById('details-body');
             
+            // 隐藏机台历史数据并清空机台选择
+            document.getElementById('machine-history-container').style.display = 'none';
+            document.getElementById('machine-select').value = '';
+            
             if (!selectedDate) {
                 tbody.innerHTML = '<tr><td colspan="7" class="loading">请选择日期</td></tr>';
                 return;
@@ -2350,6 +2404,155 @@
                 
                 tbody.appendChild(row);
             });
+        }
+
+        // 更新机台历史数据
+        function updateMachineData() {
+            if (!competitionData) return;
+
+            const selectedMachine = document.getElementById('machine-select').value;
+            const historyContainer = document.getElementById('machine-history-container');
+            const historyBody = document.getElementById('machine-history-body');
+            
+            if (!selectedMachine) {
+                historyContainer.style.display = 'none';
+                return;
+            }
+
+            // 解析选择的机台信息
+            const [machineNumber, shift] = selectedMachine.split('-');
+            
+            // 显示机台历史数据容器
+            historyContainer.style.display = 'block';
+            
+            // 清空表格
+            historyBody.innerHTML = '';
+            
+            // 收集该机台的所有历史数据
+            const machineHistory = [];
+            let totalScore = 0;
+            let totalProduction = 0;
+            let validDays = 0;
+            
+            // 遍历所有日期的数据
+            Object.keys(competitionData.daily_scores).forEach(date => {
+                const dailyScores = competitionData.daily_scores[date];
+                const machineData = dailyScores.find(data => data.机号 === machineNumber);
+                
+                if (machineData) {
+                    // 根据班次获取对应的产量和积分
+                    let production = 0;
+                    let score = 0;
+                    let status = '正常';
+                    let actualShift = ''; // 当天的具体班次（早班或中班）
+                    
+                    if (shift === '甲班') {
+                        const jiaProductionCol = Object.keys(machineData).find(key => key.includes('甲班') && key.includes('产量'));
+                        const jiaScoreCol = Object.keys(machineData).find(key => key.includes('甲班') && key.includes('积分'));
+                        
+                        if (jiaProductionCol && jiaScoreCol) {
+                            production = machineData[jiaProductionCol];
+                            score = machineData[jiaScoreCol];
+                            
+                            // 从列名中提取具体班次信息
+                            if (jiaProductionCol.includes('早班')) {
+                                actualShift = '早班';
+                            } else if (jiaProductionCol.includes('中班')) {
+                                actualShift = '中班';
+                            } else {
+                                actualShift = '甲班'; // 默认显示
+                            }
+                        }
+                    } else {
+                        const yiProductionCol = Object.keys(machineData).find(key => key.includes('乙班') && key.includes('产量'));
+                        const yiScoreCol = Object.keys(machineData).find(key => key.includes('乙班') && key.includes('积分'));
+                        
+                        if (yiProductionCol && yiScoreCol) {
+                            production = machineData[yiProductionCol];
+                            score = machineData[yiScoreCol];
+                            
+                            // 从列名中提取具体班次信息
+                            if (yiProductionCol.includes('早班')) {
+                                actualShift = '早班';
+                            } else if (yiProductionCol.includes('中班')) {
+                                actualShift = '中班';
+                            } else {
+                                actualShift = '乙班'; // 默认显示
+                            }
+                        }
+                    }
+                    
+                    // 判断台时状态
+                    if (machineData.生产牌号不符) {
+                        status = '生产牌号不符';
+                    } else if (machineData.台时不足) {
+                        status = '台时不足';
+                    } else if (production === '/' || production === null || production === undefined || production === '') {
+                        status = '台时不足';
+                    } else if (typeof production === 'string' && production !== '/') {
+                        status = production; // 显示原始字符串
+                    }
+                    
+                    // 只统计有效数据（数值类型）
+                    const isValidNumber = !isNaN(parseFloat(production)) && !isNaN(parseFloat(score));
+                    if (isValidNumber) {
+                        totalScore += parseFloat(score);
+                        totalProduction += parseFloat(production);
+                        validDays++;
+                    }
+                    
+                    machineHistory.push({
+                        date: date,
+                        shift: actualShift,
+                        production: production,
+                        score: score,
+                        status: status,
+                        isValid: isValidNumber
+                    });
+                }
+            });
+            
+            // 按日期排序
+            machineHistory.sort((a, b) => {
+                const [monthA, dayA] = a.date.split('.').map(Number);
+                const [monthB, dayB] = b.date.split('.').map(Number);
+                if (monthA !== monthB) return monthA - monthB;
+                return dayA - dayB;
+            });
+            
+            // 填充表格
+            machineHistory.forEach(data => {
+                const row = document.createElement('tr');
+                const productionClass = data.isValid ? '' : 'insufficient';
+                const scoreClass = data.isValid ? getScoreClass(parseFloat(data.score)) : 'insufficient';
+                const statusClass = data.status === '正常' ? '' : 'insufficient';
+                
+                row.innerHTML = `
+                    <td>${data.date}</td>
+                    <td>${data.shift}</td>
+                    <td class="${productionClass}">${data.production}</td>
+                    <td class="${scoreClass}">${data.score}</td>
+                    <td class="${statusClass}">${data.status}</td>
+                `;
+                
+                historyBody.appendChild(row);
+            });
+            
+            // 更新统计汇总
+            const avgProduction = validDays > 0 ? (totalProduction / validDays).toFixed(1) : 0;
+            const avgScore = validDays > 0 ? (totalScore / validDays).toFixed(2) : 0;
+            
+            document.getElementById('total-score').textContent = totalScore;
+            document.getElementById('valid-days').textContent = validDays;
+            document.getElementById('avg-production').textContent = avgProduction;
+            document.getElementById('avg-score').textContent = avgScore;
+            
+            // 获取当前排名
+            const totalRankings = competitionData.total_rankings;
+            const currentRanking = totalRankings.find(ranking => 
+                ranking.机号 === machineNumber && ranking.班次 === shift
+            );
+            document.getElementById('current-ranking').textContent = currentRanking ? currentRanking.排名 : '-';
         }
 
         // 获取积分样式类
