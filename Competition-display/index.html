@@ -358,6 +358,7 @@
 
 
 
+
 <script>window.competitionData = {
   "total_rankings": [
     {
@@ -4339,7 +4340,7 @@
       }
     ]
   },
-  "last_updated": "2025-09-26 11:49:08"
+  "last_updated": "2025-09-26 11:54:12"
 };</script>
 </head>
 <body>
@@ -4571,11 +4572,11 @@
                 const [monthA, dayA] = a.split('.').map(Number);
                 const [monthB, dayB] = b.split('.').map(Number);
                 
-                // 先比较月份，再比较日期
+                // 先比较月份，再比较日期，倒序排列（新日期在前）
                 if (monthA !== monthB) {
-                    return monthA - monthB;
+                    return monthB - monthA;
                 }
-                return dayA - dayB;
+                return dayB - dayA;
             });
             const detailsDateSelect = document.getElementById('details-date-select');
 
